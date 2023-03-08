@@ -125,6 +125,24 @@ class Graph:
         """
         The result should be a set of frozensets (one per component), 
         For instance, for network01.in: {frozenset({1, 2, 3}), frozenset({4, 5, 6, 7})}
+
+
+        Notons V le nombre de noeuds, E le nombre d'arrêtes.
+        Guettons voir la complexité de l'algorithme.
+
+        Regardons d'abord connected_components:
+            Dans le pire des cas pour cette partie là de l'algorithme, tous les noeuds sont reliés entre eux.
+            Alors on fait dans le pire des cas E*V opérations.
+        
+        Regardons maintenant reduction_ensembles :
+        En exécutant reduction_ensembles, on fait d'abord len(l)**2 opérations, mais comme len(l) diminue de 1 à chaque fois,
+            On fait SUM{i=1,E}(i**2) = E*(E+1)*(2*E+1)/2 = O(E**2) opérations
+        Ensuite, dans le pire des cas, on parcourt à chaque fois deux fois la liste. 
+                C'est à dire que i va jusqu'a len(l)-1 et j jusqu'à len(l) à chaque fois.
+                Donc on fait SUM{i=1,E}(i*(i-1)) = O(E**3) opérations
+        Alors on fait O(E***3) opérations
+
+        Finalement, l'algorithme est de complexité O( max(E**3, E*V) ) 
         """
         return set(map(frozenset, self.connected_components()))
     
@@ -185,7 +203,6 @@ def reduction_ensembles(l):
     if doublons_components(l) == False :
         return l
     else:
-        print(l)
         for i in l:
             for j in l:
                 if i.intersection(j) != set() and i!=j:
