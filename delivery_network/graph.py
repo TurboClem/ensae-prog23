@@ -99,16 +99,26 @@ class Graph:
         raise NotImplementedError
     
 
-    def connected_components(self):     
-        c = []
+    def connected_components(self):
+        """
+        On crée une liste connected_comp. Elle contient des ensembles définis de la sorte :
+            Chaque élément de connected_comp correspond à un noeud.
+            Chaque élément contient ce noeud et tous les noeuds qui lui sont reliés par une arrête.
+
+        Ensuite on utilise la fonction récursive reduction_ensembles sur cette liste.
+            reduction_ensemble prend en entrée une liste d'ensembles.
+            Elle unit les éléments d'intersection non vide de la liste prise en argument.
+            Elle renvoie la liste des composantes connectées.
+        """ 
+        connected_comp = []
         for n in self.nodes:
             l = set()
-            for k in g.graph[n]:
+            for k in self.graph[n]:
                 l.add(k[0])
             l.add(n)
-            c.append(l)
+            connected_comp.append(l)
             
-        return reduction_ensembles(c)
+        return reduction_ensembles(connected_comp)
 
 
     def connected_components_set(self):
