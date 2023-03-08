@@ -55,26 +55,60 @@ class Graph:
         dist: numeric (int or float), optional
             Distance between node1 and node2 on the edge. Default is 1.
         """
-        if node1 not in self.graph:
-            self.graph[node1] = []
-            self.nb_nodes += 1
-            self.nodes.append(node1)
-        if node2 not in self.graph:
-            self.graph[node2] = []
-            self.nb_nodes += 1
-            self.nodes.append(node2)
+        if not self.graph:
+            output = "The graph is empty"  
 
-        self.graph[node1].append((node2, power_min, dist))
-        self.graph[node2].append((node1, power_min, dist))
+        if node1 not in self.nodes :
+            self.nodes += [node1]
+            self.nb_nodes += 1
+            self.graph[node1] = []
+        
+        if node2 not in self.nodes :
+            self.nodes += [node2]
+            self.nb_nodes += 1
+            self.graph[node2] = []
+            
+        self.graph[node1] += [(node2, power_min, dist)]
+        self.graph[node2] += [(node1, power_min, dist)]
         self.nb_edges += 1
+
+        return
     
 
     def get_path_with_power(self, src, dest, power):
+        """ 
+        c = existence_chemin(src, dest)
+        
+        if c == None :
+            return None
+        
+        liste_chemins = [dest]
+        
+        noeudsvisites = set()
+        i = 0
+        while src not in noeudsvisites:
+            for k in g.graph[liste_chemins[-1]]:
+                if k[0] not in noeudsvisites and k[1] < power :
+                    noeudsvisites.append(k[0])
+            
+        p = 0
+        
+        while power > p       3  
+        return None
+    """
         raise NotImplementedError
     
 
-    def connected_components(self):
-        raise NotImplementedError
+    def connected_components(self):     
+        c = []
+        for n in self.nodes:
+            l = set()
+            for k in g.graph[n]:
+                l.add(k[0])
+            l.add(n)
+            c.append(l)
+            
+        return reduction_ensembles(c)
 
 
     def connected_components_set(self):
@@ -111,7 +145,7 @@ def graph_from_file(filename):
     g: Graph
         An object of the class Graph with the graph from file_name.
     """
-    with open(filename, "r") as file:
+    with open(filename, "r", encoding = "utf-8") as file:
         n, m = map(int, file.readline().split())
         g = Graph(range(1, n+1))
         for _ in range(m):
@@ -125,3 +159,29 @@ def graph_from_file(filename):
             else:
                 raise Exception("Format incorrect")
     return g
+
+
+
+
+#Pour connected_components_set :
+def doublons_components(l):
+    for i in l:
+        for j in l:
+            if i.intersection(j) != set() and i != j:
+                return True
+    return False
+
+def reduction_ensembles(l):
+    if doublons_components(l) == False :
+        return l
+    else:
+        print(l)
+        for i in l:
+            for j in l:
+                if i.intersection(j) != set() and i!=j:
+                    c = l
+                    c.remove(i)
+                    c.remove(j)
+                    c.append(i.union(j))
+                    l = reduction_ensembles(c)
+    return l
