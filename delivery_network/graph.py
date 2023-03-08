@@ -93,7 +93,7 @@ class Graph:
             
         p = 0
         
-        while power > p       3  
+        while power > p
         return None
     """
         raise NotImplementedError
