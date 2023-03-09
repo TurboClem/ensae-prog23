@@ -124,31 +124,35 @@ class Graph:
     
 
     def get_path_with_power(self, source, dest, p):
-        c = path_existence(self, src, dest)
-        if c == None:
+        if path_existence(self, source, dest) == None:
             return None
     
         path = [[source]]
         path_1 = []
         path_2 = path
 
-        while len(path_1) != len(path_2) :
-            n0 = 0
-            for i in range(0, len(path), 1):
-                path_1 = path
+        while path_1 != path_2 :
+            n0, n = 0, 0
+            path_1 = path
 
-                new_path = extend_path(self,path)
-                del path[i+n0]
-                for j in range(len(new_path)):
-                    path.insert(i+n0+j,new_path[j])
-            
-                path_2 = path
-                n = n0 + len(new_path)
+            for i in range(len(path)):
+                n0 += n
+                new_path = extend_path(self,path[n0])
+                n = len(new_path)
 
-                for j in path[i+n0:i+n+1]:
+                del path[n0]
+                for j in range(n):
+                    if path == []:
+                        path = [new_path[j]]
+                    else:
+                        path.insert(n0+j,new_path[j])
+                    print(path)
+
+                for j in path[n0:n0+n+1]:
                     if j[-1] == dest and good_path(self, j, p):
                         return(j)
-    
+            path_2 = path
+
         return(None)
 
 
@@ -221,21 +225,29 @@ def set_reduction(l):
 
 #Pour get_path_with_power
 def path_existence(g, src, dest):
-    for c in g.connected_components_set:
+    for c in g.connected_components_set():
         if src in c and dest in c :
             return c
     return None
 
 def extend_path(g, path):
-    visited = [i for i in path]
+    """
+    Renvoie la liste des extensions du chemin.
+    Les extensions rallongent d'un noeud non déjà visité.
+    Si on arrive à une extrémité, on renvoie une liste contenant le chemin initial.
+    """
     neighbor = [g.graph[path[-1]][i][0] for i in range(len(g.graph[path[-1]]))]
-    return [path.append(i) for i in neighbor if i not in visited]
+    E = set(neighbor)-set(neighbor).intersection(set(path))
+    if E == set():
+        new_paths = [path]
+    else:
+        new_paths = [path + [i] for i in E]
+    return new_paths
 
 def good_path(g, path, p):
     condition = True
     for i in range(len(path)-1):
-        for j in g.graph[i]:
+        for j in g.graph[path[i]]:
             if j[0] == path[i+1] and j[1] > p:
-                condition == False
+                condition = False
     return condition
-
