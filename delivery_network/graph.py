@@ -73,31 +73,7 @@ class Graph:
         self.nb_edges += 1
 
         return
-    
 
-    def get_path_with_power(self, src, dest, power):
-        """ 
-        c = existence_chemin(src, dest)
-        
-        if c == None :
-            return None
-        
-        liste_chemins = [dest]
-        
-        noeudsvisites = set()
-        i = 0
-        while src not in noeudsvisites:
-            for k in g.graph[liste_chemins[-1]]:
-                if k[0] not in noeudsvisites and k[1] < power :
-                    noeudsvisites.append(k[0])
-            
-        p = 0
-        
-        while power > p
-        return None
-    """
-        raise NotImplementedError
-    
 
     def connected_components(self):
         """
@@ -118,7 +94,7 @@ class Graph:
             l.add(n)
             connected_comp.append(l)
             
-        return reduction_ensembles(connected_comp)
+        return set_reduction(connected_comp)
 
 
     def connected_components_set(self):
@@ -146,6 +122,36 @@ class Graph:
         """
         return set(map(frozenset, self.connected_components()))
     
+
+    def get_path_with_power(self, source, dest, p):
+        c = path_existence(self, src, dest)
+        if c == None:
+            return None
+    
+        path = [[source]]
+        path_1 = []
+        path_2 = path
+
+        while len(path_1) != len(path_2) :
+            n0 = 0
+            for i in range(0, len(path), 1):
+                path_1 = path
+
+                new_path = extend_path(self,path)
+                del path[i+n0]
+                for j in range(len(new_path)):
+                    path.insert(i+n0+j,new_path[j])
+            
+                path_2 = path
+                n = n0 + len(new_path)
+
+                for j in path[i+n0:i+n+1]:
+                    if j[-1] == dest and good_path(self, j, p):
+                        return(j)
+    
+        return(None)
+
+
     def min_power(self, src, dest):
         """
         Should return path, min_power. 
@@ -192,15 +198,15 @@ def graph_from_file(filename):
 
 
 #Pour connected_components_set :
-def doublons_components(l):
+def duplicated_components(l):
     for i in l:
         for j in l:
             if i.intersection(j) != set() and i != j:
                 return True
     return False
 
-def reduction_ensembles(l):
-    if doublons_components(l) == False :
+def set_reduction(l):
+    if duplicated_components(l) == False :
         return l
     else:
         for i in l:
@@ -210,5 +216,26 @@ def reduction_ensembles(l):
                     c.remove(i)
                     c.remove(j)
                     c.append(i.union(j))
-                    l = reduction_ensembles(c)
+                    l = set_reduction(c)
     return l
+
+#Pour get_path_with_power
+def path_existence(g, src, dest):
+    for c in g.connected_components_set:
+        if src in c and dest in c :
+            return c
+    return None
+
+def extend_path(g, path):
+    visited = [i for i in path]
+    neighbor = [g.graph[path[-1]][i][0] for i in range(len(g.graph[path[-1]]))]
+    return [path.append(i) for i in neighbor if i not in visited]
+
+def good_path(g, path, p):
+    condition = True
+    for i in range(len(path)-1):
+        for j in g.graph[i]:
+            if j[0] == path[i+1] and j[1] > p:
+                condition == False
+    return condition
+
