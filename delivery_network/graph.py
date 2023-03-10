@@ -124,6 +124,17 @@ class Graph:
     
 
     def get_path_with_power(self, source, dest, p):
+        """ 
+        On fait un parcours en largeur depuis la source.
+        On réalise une liste de tous les chemins possibles depuis la source.
+        Initalement, le seul chemin parcouru  est [source]
+        A chaque étape, on a k chemins. 
+            Pour tous ces k chemins, on prend le bout du chemin.
+            On trouve ses voisins qui n'ont pas déjà été visités lors du chemin.
+            On remplace le k-ième chemin par les nouveaux qui sont ce même chemin étendu à chacun des voisins.
+        Dès le moment où on rencontre la destination, on vérifie que le chemin est franchissable par le camion (puissance), et on le stocke.
+        Enfin, on choisit dans ce stock le chemin de distance la plus courte.
+        """
         if path_existence(self, source, dest) == None:
             return None
     
@@ -131,36 +142,87 @@ class Graph:
         path_1 = []
         path_2 = path
 
+        path_bank = []
+
         while path_1 != path_2 :
             n0, n = 0, 0
-            path_1 = path
+            path_1 = [i for i in path]
 
             for i in range(len(path)):
                 n0 += n
                 new_path = extend_path(self,path[n0])
                 n = len(new_path)
+                if n > 0:
+                    del path[n0]
 
-                del path[n0]
                 for j in range(n):
                     if path == []:
                         path = [new_path[j]]
                     else:
                         path.insert(n0+j,new_path[j])
-                    print(path)
-
                 for j in path[n0:n0+n+1]:
-                    if j[-1] == dest and good_path(self, j, p):
-                        return(j)
-            path_2 = path
+                    gpath = good_path(self, j, p)
+                    if j[-1] == dest and gpath[0] and j not in path_bank:
+                        path_bank.append((j, gpath[2]))
+                        
+            path_2 = [i for i in path]
+        
+        if path_bank == []:
+            return(None)
+        
+        coolpath = path_bank[0]
+        for i in path_bank:
+            if coolpath[1] > i[1]:
+                coolpath = i
+        return(coolpath[0])
 
-        return(None)
-
+    
+    def get_path_with_power_bonus(self, start_node):
+        unvisited_nodes = list(graph.get_nodes())
+ 
+        shortest_path = {}
+        previous_nodes = {}
+ 
+    # We'll use max_value to initialize the "infinity" value of the unvisited nodes   
+        max_value = sys.maxsize
+        for node in unvisited_nodes:
+            shortest_path[node] = max_value
+    # However, we initialize the starting node's value with 0   
+        shortest_path[start_node] = 0
+    
+    # The algorithm executes until we visit all nodes
+        while unvisited_nodes:
+        # The code block below finds the node with the lowest score
+            current_min_node = None
+            for node in unvisited_nodes: # Iterate over the nodes
+                if current_min_node == None:
+                    current_min_node = node
+                elif shortest_path[node] < shortest_path[current_min_node]:
+                    current_min_node = node
+                
+        # The code block below retrieves the current node's neighbors and updates their distances
+            neighbors = graph.get_outgoing_edges(current_min_node)
+            for neighbor in neighbors:
+                tentative_value = shortest_path[current_min_node] + graph.value(current_min_node, neighbor)
+                if tentative_value < shortest_path[neighbor]:
+                    shortest_path[neighbor] = tentative_value
+                # We also update the best path to the current node
+                    previous_nodes[neighbor] = current_min_node
+ 
+        # After visiting its neighbors, we mark the node as "visited"
+            unvisited_nodes.remove(current_min_node)
+    
+        return previous_nodes, shortest_path
 
     def min_power(self, src, dest):
         """
         Should return path, min_power. 
         """
-        raise NotImplementedError
+        liste_puissance = []
+        liste_routes = turbo_fonction(src, dest)
+        for chemin in liste_routes :
+            liste_puissance.append(chemin[len(chemin) - 1])
+        return max(liste_puissance)
 
 
 def graph_from_file(filename):
@@ -217,7 +279,8 @@ def set_reduction(l):
             for j in l:
                 if i.intersection(j) != set() and i!=j:
                     c = l
-                    c.remove(i)
+                    if i in c:
+                        c.remove(i)
                     c.remove(j)
                     c.append(i.union(j))
                     l = set_reduction(c)
@@ -245,9 +308,21 @@ def extend_path(g, path):
     return new_paths
 
 def good_path(g, path, p):
+    """
+    Renvoie un couple booléen, entier, entier.
+    Le booléen reflète la capacité du camion à passer le chemin path.
+    Le premier entier est la puissance minimale nécessaire à un camion pour parcourir le chemin
+    Le second entier est la distance du chemin.
+    """
     condition = True
+    pmax = 0
+    distance = 0
     for i in range(len(path)-1):
         for j in g.graph[path[i]]:
+            if j[1] > pmax:
+                pmax = j[1]
             if j[0] == path[i+1] and j[1] > p:
                 condition = False
-    return condition
+            distance += j[2]
+    return condition, pmax, distance
+
