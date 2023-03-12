@@ -1,3 +1,5 @@
+import sys
+
 class Graph:
     """
     A class representing graphs as adjacency lists and implementing various algorithms on the graphs. Graphs in the class are not oriented. 
@@ -123,7 +125,7 @@ class Graph:
         return set(map(frozenset, self.connected_components()))
     
 
-    def get_path_with_power(self, source, dest, p):
+    def get_path_with_power_first_try(self, source, dest, p):
         """ 
         On fait un parcours en largeur depuis la source.
         On réalise une liste de tous les chemins possibles depuis la source.
@@ -138,7 +140,7 @@ class Graph:
         if path_existence(self, source, dest) == None:
             return None
     
-        path = [[source]]
+        path = [[source]] # On initialilse : le seul chemin parcouru est le noeud source
         path_1 = []
         path_2 = path
 
@@ -150,6 +152,7 @@ class Graph:
 
             for i in range(len(path)):
                 n0 += n
+                # on étend tous les chemins parcourus à leurs voisins
                 new_path = extend_path(self,path[n0])
                 n = len(new_path)
                 if n > 0:
@@ -161,6 +164,8 @@ class Graph:
                     else:
                         path.insert(n0+j,new_path[j])
                 for j in path[n0:n0+n+1]:
+                    # Si le chemin passe par la destination, on a trouvé un chemin qui convient
+                    # On l'ajoute donc à notre banque de chemins
                     gpath = good_path(self, j, p)
                     if j[-1] == dest and gpath[0] and j not in path_bank:
                         path_bank.append((j, gpath[2]))
@@ -176,53 +181,71 @@ class Graph:
                 coolpath = i
         return(coolpath[0])
 
-    
-    def get_path_with_power_bonus(self, start_node):
-        unvisited_nodes = list(graph.get_nodes())
- 
-        shortest_path = {}
-        previous_nodes = {}
- 
-    # We'll use max_value to initialize the "infinity" value of the unvisited nodes   
-        max_value = sys.maxsize
-        for node in unvisited_nodes:
-            shortest_path[node] = max_value
-    # However, we initialize the starting node's value with 0   
-        shortest_path[start_node] = 0
-    
-    # The algorithm executes until we visit all nodes
-        while unvisited_nodes:
-        # The code block below finds the node with the lowest score
-            current_min_node = None
-            for node in unvisited_nodes: # Iterate over the nodes
-                if current_min_node == None:
-                    current_min_node = node
-                elif shortest_path[node] < shortest_path[current_min_node]:
-                    current_min_node = node
-                
-        # The code block below retrieves the current node's neighbors and updates their distances
-            neighbors = graph.get_outgoing_edges(current_min_node)
-            for neighbor in neighbors:
-                tentative_value = shortest_path[current_min_node] + graph.value(current_min_node, neighbor)
-                if tentative_value < shortest_path[neighbor]:
-                    shortest_path[neighbor] = tentative_value
-                # We also update the best path to the current node
-                    previous_nodes[neighbor] = current_min_node
- 
-        # After visiting its neighbors, we mark the node as "visited"
-            unvisited_nodes.remove(current_min_node)
-    
-        return previous_nodes, shortest_path
 
-    def min_power(self, src, dest):
+    def get_path_with_power(self, source, destination, power):
+        """
+        On utilise l'algorithme de Dijkstra
+        """
+        # On vérifie que source et destination sont bien reliables.
+        con_comp = path_existence(self, source, destination)
+        if con_comp == None:
+            return None
+        
+        unvisited = list(con_comp)
+        dmax = sys.maxsize # On définit la distance de tous les points à la source comme étant "infinie" (maxsize donc)
+        node_distance = dict([(n, dmax) for n in unvisited])
+        node_distance[source] = 0
+        previous_node = {} #Va stocker pour chaque noeud, le noeud qui le précède dans le chemin le plus court vers la source
+
+        # On parcourt tous les noeuds de la composante connectée
+        while unvisited != []:
+            # On trouve le noeud le plus proche de la source : nearest_node
+            nearest_node = None
+            for node in unvisited:
+                if nearest_node == None:
+                    nearest_node = node
+                elif node_distance[node] < node_distance[nearest_node]:
+                    nearest_node = node
+            # On parcourt les voisins du nearest_node
+            for neighbor in self.graph[nearest_node]:
+                # On regarde si le voisin est plus proche de la source en passant par nearest_node que par l'ancien chemin
+                new_distance = node_distance[nearest_node] + neighbor[2]
+                if new_distance < node_distance[neighbor[0]] and neighbor[1] <= power:
+                    node_distance[neighbor[0]] = new_distance
+                    previous_node[neighbor[0]] = nearest_node
+            unvisited.remove(nearest_node)
+        path = [destination]
+        i = destination
+        while i != source:
+            if i not in previous_node.keys():
+                return None
+            j = previous_node[i]
+            path.insert(0, j)
+            i = j
+        return path
+            
+
+    def min_power(self, source, destination):
         """
         Should return path, min_power. 
+        """
+        # Si aucun chemin n'existe, on renvoie None
+        if path_existence(self, source, destination) == None:
+            return None
+
+        path = None
+        i = -1
+        while path == None:
+            i+= 1
+            path = self.get_path_with_power(source, destination, i)
+        return i, path
         """
         liste_puissance = []
         liste_routes = turbo_fonction(src, dest)
         for chemin in liste_routes :
             liste_puissance.append(chemin[len(chemin) - 1])
         return max(liste_puissance)
+        """
 
 
 def graph_from_file(filename):
@@ -287,6 +310,9 @@ def set_reduction(l):
     return l
 
 #Pour get_path_with_power
+def xor(a, b):
+    return ((a and not b) or (b and not a))
+
 def path_existence(g, src, dest):
     for c in g.connected_components_set():
         if src in c and dest in c :
