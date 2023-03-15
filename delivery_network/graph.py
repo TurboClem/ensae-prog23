@@ -1,4 +1,6 @@
 import sys
+import time
+import random
 
 class Graph:
     """
@@ -57,6 +59,8 @@ class Graph:
         dist: numeric (int or float), optional
             Distance between node1 and node2 on the edge. Default is 1.
         """
+        self.nodes = list(self.nodes) # Evite l'erreur d'ajout de villes textuelles ("Paris") lorsque self.nodes = range(,)
+
         if not self.graph:
             output = "The graph is empty"  
 
@@ -126,6 +130,8 @@ class Graph:
     
 
     def get_path_with_power_first_try(self, source, dest, p):
+        # On laisse ce code ici car il répondait à la Q3, avant qu'on ne s'intéresse à la distance.
+        # On l'a ensuite adapté pour la Q5, avant de penser à l'algorithme de Dijkstra que nous avons utilisé dans get_path_with_power
         """ 
         On fait un parcours en largeur depuis la source.
         On réalise une liste de tous les chemins possibles depuis la source.
@@ -168,18 +174,20 @@ class Graph:
                     # On l'ajoute donc à notre banque de chemins
                     gpath = good_path(self, j, p)
                     if j[-1] == dest and gpath[0] and j not in path_bank:
-                        path_bank.append((j, gpath[2]))
+                        path_bank.append((j, gpath[1], gpath[2]))
                         
             path_2 = [i for i in path]
         
         if path_bank == []:
             return(None)
         
+        """
         coolpath = path_bank[0]
         for i in path_bank:
-            if coolpath[1] > i[1]:
+            if coolpath[2] > i[2]:
                 coolpath = i
-        return(coolpath[0])
+        """
+        return(path_bank)
 
 
     def get_path_with_power(self, source, destination, power):
@@ -187,11 +195,16 @@ class Graph:
         On utilise l'algorithme de Dijkstra
         """
         # On vérifie que source et destination sont bien reliables.
+        # Si on s'occupe des networks on met ça
+        """
         con_comp = path_existence(self, source, destination)
         if con_comp == None:
             return None
-        
         unvisited = list(con_comp)
+        """
+        # Si on s'occupe des routes on met ça (le grpahe est alors connexe)
+        unvisited = self.nodes[:]
+
         dmax = sys.maxsize # On définit la distance de tous les points à la source comme étant "infinie" (maxsize donc)
         node_distance = dict([(n, dmax) for n in unvisited])
         node_distance[source] = 0
@@ -229,6 +242,7 @@ class Graph:
         """
         Should return path, min_power. 
         """
+        """
         # Si aucun chemin n'existe, on renvoie None
         if path_existence(self, source, destination) == None:
             return None
@@ -240,13 +254,39 @@ class Graph:
             path = self.get_path_with_power(source, destination, i)
         return i, path
         """
-        liste_puissance = []
-        liste_routes = turbo_fonction(src, dest)
-        for chemin in liste_routes :
-            liste_puissance.append(chemin[len(chemin) - 1])
-        return max(liste_puissance)
         """
+        paths = self.get_path_with_power_first_try(source, destination, sys.maxsize)
+        liste_puissance = [i[1] for i in paths]
+        pmin = min(liste_puissance)
+        path = paths[liste_puissance.index(pmin)][0]
+        return pmin, path
 
+        #liste_routes = turbo_fonction(src, dest)
+        #for chemin in liste_routes :
+        #    liste_puissance.append(chemin[len(chemin) - 1])
+        """
+        path = self.get_path_with_power(source, destination, sys.maxsize)
+        if path == None:
+            return None, None
+        pmax = 0
+        for i in range(len(path)-1):
+            for j in self.graph[path[i]]:
+                if j[0] == path[i+1]:
+                    if j[1] > pmax:
+                        pmax = j[1]
+        pmin = 0
+        while pmax - pmin > 1:
+            path = self.get_path_with_power(source, destination, pmin + (pmax-pmin)//2)
+            if path == None:
+                pmin = pmin + (pmax-pmin)//2
+            else :
+                pmax = pmin + (pmax-pmin)//2
+
+        if pmax - pmin == 1 :
+            if path == None:
+                return pmax, self.get_path_with_power(source, destination, pmax)
+        return pmax, path
+    
 
 def graph_from_file(filename):
     """
@@ -269,8 +309,14 @@ def graph_from_file(filename):
         An object of the class Graph with the graph from file_name.
     """
     with open(filename, "r", encoding = "utf-8") as file:
-        n, m = map(int, file.readline().split())
-        g = Graph(range(1, n+1))
+        line0 = file.readline().split()
+        if len(line0) == 2:
+            n, m = map(int, line0)
+            g = Graph(range(1, n+1))
+        else :
+            m = int(line0[0])
+            g = Graph()
+
         for _ in range(m):
             edge = list(map(int, file.readline().split()))
             if len(edge) == 3:
@@ -309,7 +355,7 @@ def set_reduction(l):
                     l = set_reduction(c)
     return l
 
-#Pour get_path_with_power
+#Pour get_path_with_power_first_try
 def xor(a, b):
     return ((a and not b) or (b and not a))
 
@@ -345,10 +391,146 @@ def good_path(g, path, p):
     distance = 0
     for i in range(len(path)-1):
         for j in g.graph[path[i]]:
-            if j[1] > pmax:
-                pmax = j[1]
-            if j[0] == path[i+1] and j[1] > p:
-                condition = False
-            distance += j[2]
+            if j[0] == path[i+1]:
+                if j[1] > p:
+                    condition = False
+                elif j[1] > pmax:
+                    pmax = j[1]
+                distance += j[2]
     return condition, pmax, distance
 
+
+# Commandes pour graphviz :
+def graphviz(g):
+    from graphviz import Digraph
+    g = Digraph(g)
+    print(g.source)
+    return 
+
+# Estimation du temps moyen de calcul :
+def time_estimator(nb_essais, numero):
+    """
+    Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet
+    """
+    data_path = "/home/onyxia/work/ensae-prog23/input/"
+    g = graph_from_file(data_path + f"network.{numero}.in")
+    total = 0
+    with open(data_path + f"routes.{numero}.in", "r", encoding = "utf-8") as file:
+        nb_trajets = int(file.readline().split()[0])
+        for _ in range(min(nb_essais, nb_trajets)):
+            trajet = file.readline().split()
+            node1 = trajet[0]
+            node2 = trajet[1]
+            t0 = time.perf_counter()
+            g.min_power(node1, node2)
+            t1 = time.perf_counter()
+            total += t1 - t0
+    mean_time = total/min(nb_trajets, nb_essais)
+    return (mean_time * nb_trajets)
+    """
+    Pour route 5, on trouve un temps de calcul moyen par trajet de 10min 40sec, soit plus d'1,5 millions d'heures
+    pour l'ensemble des trajets. C'est bien trop.
+    """
+
+# Pour kruskal
+def initial_node(previous_node,node):
+    """
+    Trouve le noeud initial d'un noeud (c'est à dire le noeud à partir duquel a été créé la composante connexe)
+    Il permettra d'indicer cette composante.
+    """
+    if previous_node[node] != node:
+        previous_node[node] = initial_node(previous_node,previous_node[node])
+    return previous_node[node]
+    
+def union(previous_node,rank,node1,node2):
+    """
+    Unit node 1 à node 2 en les faisant devenir clef/valeur l'un de l'autre dans previous_node.
+    Actualise également le rang.
+    """
+    i1 = initial_node(previous_node,node1)
+    i2 = initial_node(previous_node,node2)
+    if i1 == i2: 
+        return None
+    if rank[i2] < rank[i1]:
+        previous_node[i2] = i1
+    else:
+        previous_node[i1]=i2
+        if rank[i1] == rank[i2]:
+            rank[i2] += 1
+    return None
+
+def kruskal(g):
+    g_mst = Graph()
+    edges = []
+    previous_node = {}  # Noeud précédent. Permettra de remonter au noeud initial de chaque composante connexe avec initial_node
+                        # Le noeud initial permet d'indicer la composante connexe.
+    rank = {}           # Le rang nous permettra de lier des gros arbres avec des petits
+
+    for node in g.nodes:
+        previous_node[node] = node
+        rank[node] = 0
+    # Chaque noeud a comme noeud initial lui même, et comme rang 0
+
+    for node in g.graph:
+        for edge in g.graph[node]:
+            edges.append((node,edge[0],edge[1]))
+    edges.sort(key = lambda x : x[2]) # Permet de trier la liste par rapport à la troisième valeur des sous liste de la liste edge
+
+    for edge in edges:
+        if initial_node(previous_node,edge[0]) != initial_node(previous_node,edge[1]):
+        # Si les bouts d'une arrête nne sont pas déjà dans la même composante connexe, alors on les unit.
+            g_mst.add_edge(edge[0],edge[1],edge[2])
+            union(previous_node,rank,edge[0],edge[1])
+
+    return g_mst
+
+# Pour new_min_power
+def power(self,node1,node2):
+    neighbors = self.graph[node1]
+    n = len(neighbors)
+    k = 0
+    while neighbors[k][0] != node2 and k < n:
+        k += 1
+    if k == n:
+        return None
+    return neighbors[k][1]
+
+
+def get_path(g, source, dest):
+    # On s'autorise ici à renvoyer le chemin et la puissance minimale du chemin, ce qu'on ne pouvait pas faire
+    # avant avec les tests imposés pour get_path_with_power
+    con_comp = path_existence(g, source, dest)
+    if con_comp == None:
+        return None
+
+    visited = set()
+    previous_nodes = {}
+    following = [source]
+
+    while following != [] or following[0] != dest:
+        node = heappop(following)    # pop le premier élément de following, et attribue la valeur à x
+        if node in visited:
+            continue                # Passe directement à la prochaine étape du while
+        visited.add(node)
+        for node2, p, d in g.graph[node]:
+            if node2 in visited:
+                continue
+            else:
+                heappush(following, node2) # met node2 à la fin de following (.append version piles)
+                previous_nodes[node2] = node
+    path = [dest]
+    node = dest
+    p_min = 0
+    while node != source:
+        p_min = max(p_min,power(g, node, previous_nodes[node]))
+        node = previous_nodes[node]
+        path.insert(0, node)
+    return path, p_min
+
+
+def new_power_min(self, source, dest):
+    con_comp = path_existence(self, source, dest)
+    if con_comp == None:
+        return None
+    g = kruskal(self)
+    return get_path(g, source, dest)​
