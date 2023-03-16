@@ -507,8 +507,9 @@ def get_path(g, source, dest):
     previous_nodes = {}
     following = [source]
 
-    while following != [] or following[0] != dest:
-        node = heappop(following)    # pop le premier élément de following, et attribue la valeur à x
+    while following != []:
+        node = following[0]
+        del following[0] 
         if node in visited:
             continue                # Passe directement à la prochaine étape du while
         visited.add(node)
@@ -516,7 +517,7 @@ def get_path(g, source, dest):
             if node2 in visited:
                 continue
             else:
-                heappush(following, node2) # met node2 à la fin de following (.append version piles)
+                following.append(node2)
                 previous_nodes[node2] = node
     path = [dest]
     node = dest
@@ -528,9 +529,10 @@ def get_path(g, source, dest):
     return path, p_min
 
 
-def new_power_min(self, source, dest):
-    con_comp = path_existence(self, source, dest)
+def new_power_min(g, source, dest):
+    con_comp = path_existence(g, source, dest)
     if con_comp == None:
         return None
-    g = kruskal(self)
-    return get_path(g, source, dest)​
+    g = kruskal(g)
+    return get_path(g, source, dest)
+
