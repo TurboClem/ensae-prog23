@@ -81,7 +81,7 @@ class Graph:
         return
 
 
-    def connected_components(self):
+    def connected_components_first_try(self):
         """
         On crée une liste connected_comp. Elle contient des ensembles définis de la sorte :
             Chaque élément de connected_comp correspond à un noeud.
@@ -101,6 +101,24 @@ class Graph:
             connected_comp.append(l)
             
         return set_reduction(connected_comp)
+    
+    def connected_components(self):
+        con_comp = [{self.nodes[0]}]
+        for node in self.nodes:
+            indice = -1
+            nb_con_comp = len(con_comp)
+            for i in range(nb_con_comp):
+                if node in con_comp[i]:
+                    indice = i
+            if indice == -1 :
+                con_comp += [{node}]
+                indice = nb_con_comp
+            print(i)
+            print("avant", con_comp)
+            for neighbor, power, distance in self.graph[node]:
+                con_comp[i].add(neighbor)
+                print(con_comp)
+        return con_comp
 
 
     def connected_components_set(self):
@@ -401,29 +419,39 @@ def good_path(g, path, p):
 
 
 # Commandes pour graphviz :
+"""
 def graphviz(g):
     from graphviz import Digraph
     g = Digraph(g)
     print(g.source)
     return 
+"""
 
 # Estimation du temps moyen de calcul :
-def time_estimator(nb_essais, numero):
+def time_estimator(nb_essais, numero, arbre = True):
     """
     Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet
     """
     data_path = "/home/onyxia/work/ensae-prog23/input/"
     g = graph_from_file(data_path + f"network.{numero}.in")
+    if arbre :
+        g = kruskal(g)
     total = 0
     with open(data_path + f"routes.{numero}.in", "r", encoding = "utf-8") as file:
         nb_trajets = int(file.readline().split()[0])
         for _ in range(min(nb_essais, nb_trajets)):
             trajet = file.readline().split()
-            node1 = trajet[0]
-            node2 = trajet[1]
-            t0 = time.perf_counter()
-            g.min_power(node1, node2)
-            t1 = time.perf_counter()
+            node1 = int(trajet[0])
+            node2 = int(trajet[1])
+            if arbre :
+                t0 = time.perf_counter()
+                new_min_power(g, node1, node2)
+                t1 = time.perf_counter()
+            else :
+                t0 = time.perf_counter()
+                g.min_power(node1, node2)
+                t1 = time.perf_counter()
+
             total += t1 - t0
     mean_time = total/min(nb_trajets, nb_essais)
     return (mean_time * nb_trajets)
@@ -460,28 +488,29 @@ def union(previous_node,rank,node1,node2):
     return None
 
 def kruskal(g):
+    print('y')
     g_mst = Graph()
     edges = []
     previous_node = {}  # Noeud précédent. Permettra de remonter au noeud initial de chaque composante connexe avec initial_node
                         # Le noeud initial permet d'indicer la composante connexe.
     rank = {}           # Le rang nous permettra de lier des gros arbres avec des petits
-
+    print('z')
     for node in g.nodes:
         previous_node[node] = node
         rank[node] = 0
     # Chaque noeud a comme noeud initial lui même, et comme rang 0
-
+    print('a')
     for node in g.graph:
         for edge in g.graph[node]:
             edges.append((node,edge[0],edge[1]))
     edges.sort(key = lambda x : x[2]) # Permet de trier la liste par rapport à la troisième valeur des sous liste de la liste edge
-
+    print('b')
     for edge in edges:
         if initial_node(previous_node,edge[0]) != initial_node(previous_node,edge[1]):
         # Si les bouts d'une arrête nne sont pas déjà dans la même composante connexe, alors on les unit.
             g_mst.add_edge(edge[0],edge[1],edge[2])
             union(previous_node,rank,edge[0],edge[1])
-
+    print('c')
     return g_mst
 
 # Pour new_min_power
@@ -499,9 +528,9 @@ def power(self,node1,node2):
 def get_path(g, source, dest):
     # On s'autorise ici à renvoyer le chemin et la puissance minimale du chemin, ce qu'on ne pouvait pas faire
     # avant avec les tests imposés pour get_path_with_power
-    con_comp = path_existence(g, source, dest)
-    if con_comp == None:
-        return None
+    #con_comp = path_existence(g, source, dest)
+    #if con_comp == None:
+    #    return None
 
     visited = set()
     previous_nodes = {}
@@ -529,10 +558,9 @@ def get_path(g, source, dest):
     return path, p_min
 
 
-def new_power_min(g, source, dest):
-    con_comp = path_existence(g, source, dest)
-    if con_comp == None:
-        return None
+def new_min_power(g, source, dest):
+    #con_comp = path_existence(g, source, dest)
+    #if con_comp == None:
+    #    return None
     g = kruskal(g)
     return get_path(g, source, dest)
-
