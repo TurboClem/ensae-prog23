@@ -113,12 +113,12 @@ class Graph:
             if indice == -1 :
                 con_comp += [{node}]
                 indice = nb_con_comp
-            print(i)
+            print(indice)
             print("avant", con_comp)
             for neighbor, power, distance in self.graph[node]:
-                con_comp[i].add(neighbor)
+                con_comp[indice].add(neighbor)
                 print(con_comp)
-        return con_comp
+        return set_reduction(con_comp)
 
 
     def connected_components_set(self):
