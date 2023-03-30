@@ -488,29 +488,24 @@ def union(previous_node,rank,node1,node2):
     return None
 
 def kruskal(g):
-    print('y')
     g_mst = Graph()
     edges = []
     previous_node = {}  # Noeud précédent. Permettra de remonter au noeud initial de chaque composante connexe avec initial_node
                         # Le noeud initial permet d'indicer la composante connexe.
     rank = {}           # Le rang nous permettra de lier des gros arbres avec des petits
-    print('z')
     for node in g.nodes:
         previous_node[node] = node
         rank[node] = 0
     # Chaque noeud a comme noeud initial lui même, et comme rang 0
-    print('a')
     for node in g.graph:
         for edge in g.graph[node]:
             edges.append((node,edge[0],edge[1]))
     edges.sort(key = lambda x : x[2]) # Permet de trier la liste par rapport à la troisième valeur des sous liste de la liste edge
-    print('b')
     for edge in edges:
         if initial_node(previous_node,edge[0]) != initial_node(previous_node,edge[1]):
         # Si les bouts d'une arrête nne sont pas déjà dans la même composante connexe, alors on les unit.
             g_mst.add_edge(edge[0],edge[1],edge[2])
             union(previous_node,rank,edge[0],edge[1])
-    print('c')
     return g_mst
 
 # Pour new_min_power
@@ -528,8 +523,8 @@ def power(self,node1,node2):
 def get_path(g, source, dest):
     # On s'autorise ici à renvoyer le chemin et la puissance minimale du chemin, ce qu'on ne pouvait pas faire
     # avant avec les tests imposés pour get_path_with_power
-    #con_comp = path_existence(g, source, dest)
-    #if con_comp == None:
+    # con_comp = path_existence(g, source, dest)
+    # if con_comp == None:
     #    return None
 
     visited = set()
@@ -562,5 +557,11 @@ def new_min_power(g, source, dest):
     #con_comp = path_existence(g, source, dest)
     #if con_comp == None:
     #    return None
-    g = kruskal(g)
+    # pas besoin de g = kruskal(g) car on suppose que le graphe est déjà une arbre
     return get_path(g, source, dest)
+
+
+def route_opti (numero):
+
+    raise NotImplementedError()
+    
