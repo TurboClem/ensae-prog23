@@ -1,5 +1,5 @@
-import sys
 import time
+import sys
 import random
 
 class Graph:
@@ -336,7 +336,7 @@ def graph_from_file(filename):
             g = Graph()
 
         for _ in range(m):
-            edge = list(map(int, file.readline().split()))
+            edge = list(map(write_number, file.readline().split()))
             if len(edge) == 3:
                 node1, node2, power_min = edge
                 g.add_edge(node1, node2, power_min) # will add dist=1 by default
@@ -348,6 +348,14 @@ def graph_from_file(filename):
     return g
 
 
+
+# Pour graph from file :
+def write_number(a):
+    """
+    Writes string numbers as integers if they are, as floats if they are
+    """
+    a = float(a)
+    return (int(a) if a == int(a) else a)
 
 
 #Pour connected_components_set :
@@ -463,6 +471,7 @@ def time_estimator(nb_essais, numero, arbre = True):
 # Pour kruskal
 def initial_node(previous_node,node):
     """
+    Fonction de previous_node un dictionnaire, et de node un noeud donc un entier.
     Trouve le noeud initial d'un noeud (c'est à dire le noeud à partir duquel a été créé la composante connexe)
     Il permettra d'indicer cette composante.
     """
@@ -472,7 +481,11 @@ def initial_node(previous_node,node):
     
 def union(previous_node,rank,node1,node2):
     """
-    Unit node 1 à node 2 en les faisant devenir clef/valeur l'un de l'autre dans previous_node.
+    Unit node 1 à node 2 en faisant devenir leur noeud initial clef/valeur l'un de l'autre dans previous_node.
+    En d'autres termes, dans kruskal lorsqu'on tombe sur une arrête qui relie deux arbres,
+    union les relie et actualise leurs rangs et noeud initiaux.
+    On actualise le rang pour avoir le même noeud initial quelque soit le noeud de l'arbre 
+    (on lie les arbres en prenant tjrs le même noeud initial ; celui de rang le plus élevé)
     Actualise également le rang.
     """
     i1 = initial_node(previous_node,node1)
@@ -485,6 +498,7 @@ def union(previous_node,rank,node1,node2):
         previous_node[i1]=i2
         if rank[i1] == rank[i2]:
             rank[i2] += 1
+    print(rank[i1], rank[i2])
     return None
 
 def kruskal(g):
@@ -499,14 +513,14 @@ def kruskal(g):
     # Chaque noeud a comme noeud initial lui même, et comme rang 0
     for node in g.graph:
         for edge in g.graph[node]:
-            edges.append((node,edge[0],edge[1]))
+            edges.append((node,edge[0],edge[1])) # edges devient la liste des arrêtes notées (node1, node2, power)
     edges.sort(key = lambda x : x[2]) # Permet de trier la liste par rapport à la troisième valeur des sous liste de la liste edge
     for edge in edges:
         if initial_node(previous_node,edge[0]) != initial_node(previous_node,edge[1]):
         # Si les bouts d'une arrête nne sont pas déjà dans la même composante connexe, alors on les unit.
             g_mst.add_edge(edge[0],edge[1],edge[2])
             union(previous_node,rank,edge[0],edge[1])
-    return g_mst
+    return g_mst, previous_node
 
 # Pour new_min_power
 def power(self,node1,node2):
@@ -518,6 +532,8 @@ def power(self,node1,node2):
     if k == n:
         return None
     return neighbors[k][1]
+
+#def previous(g):
 
 
 def get_path(g, source, dest):
@@ -547,10 +563,23 @@ def get_path(g, source, dest):
     node = dest
     p_min = 0
     while node != source:
-        p_min = max(p_min,power(g, node, previous_nodes[node]))
+        p_min = max(p_min, power(g, node, previous_nodes[node]))
         node = previous_nodes[node]
         path.insert(0, node)
     return path, p_min
+
+def get_previous(g, previous_node):
+    previous_path = {}    
+    unvisited = [i for i in g.node]
+
+    while unvisited != []:
+        node = unvisited[0]
+        del unvisited[0]
+
+    while path[0] != source:
+        if previous_node[node] != initial_node[node]:
+            continue
+    raise NotImplementedError()
 
 
 def new_min_power(g, source, dest):
