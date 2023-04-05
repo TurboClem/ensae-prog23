@@ -28,6 +28,7 @@ class Graph:
         nodes: list, optional
             A list of nodes. Default is empty.
         """
+        # self.nodes = list(self.nodes) # Evite l'erreur d'ajout de villes textuelles ("Paris") lorsque self.nodes = range(,)
         self.nodes = nodes
         self.graph = dict([(n, []) for n in nodes])
         self.nb_nodes = len(nodes)
@@ -59,10 +60,11 @@ class Graph:
         dist: numeric (int or float), optional
             Distance between node1 and node2 on the edge. Default is 1.
         """
-        self.nodes = list(self.nodes) # Evite l'erreur d'ajout de villes textuelles ("Paris") lorsque self.nodes = range(,)
 
+        """
         if not self.graph:
             output = "The graph is empty"  
+        """
 
         if node1 not in self.nodes :
             self.nodes += [node1]
@@ -113,11 +115,8 @@ class Graph:
             if indice == -1 :
                 con_comp += [{node}]
                 indice = nb_con_comp
-            print(indice)
-            print("avant", con_comp)
             for neighbor, power, distance in self.graph[node]:
                 con_comp[indice].add(neighbor)
-                print(con_comp)
         return set_reduction(con_comp)
 
 
@@ -221,15 +220,15 @@ class Graph:
         unvisited = list(con_comp)
         """
         # Si on s'occupe des routes on met ça (le grpahe est alors connexe)
-        unvisited = self.nodes[:]
+        unvisited = set(self.nodes[:])
 
         dmax = sys.maxsize # On définit la distance de tous les points à la source comme étant "infinie" (maxsize donc)
         node_distance = dict([(n, dmax) for n in unvisited])
         node_distance[source] = 0
-        previous_node = {} #Va stocker pour chaque noeud, le noeud qui le précède dans le chemin le plus court vers la source
+        previous = {} #Va stocker pour chaque noeud, le noeud qui le précède dans le chemin le plus court vers la source
 
         # On parcourt tous les noeuds de la composante connectée
-        while unvisited != []:
+        while unvisited != set():
             # On trouve le noeud le plus proche de la source : nearest_node
             nearest_node = None
             for node in unvisited:
@@ -243,14 +242,14 @@ class Graph:
                 new_distance = node_distance[nearest_node] + neighbor[2]
                 if new_distance < node_distance[neighbor[0]] and neighbor[1] <= power:
                     node_distance[neighbor[0]] = new_distance
-                    previous_node[neighbor[0]] = nearest_node
+                    previous[neighbor[0]] = nearest_node
             unvisited.remove(nearest_node)
         path = [destination]
         i = destination
         while i != source:
-            if i not in previous_node.keys():
+            if i not in previous.keys():
                 return None
-            j = previous_node[i]
+            j = previous[i]
             path.insert(0, j)
             i = j
         return path
@@ -441,9 +440,15 @@ def time_estimator(nb_essais, numero, arbre = True):
     Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet
     """
     data_path = "/home/onyxia/work/ensae-prog23/input/"
+    t0 = time.perf_counter()
     g = graph_from_file(data_path + f"network.{numero}.in")
+    t1 = time.perf_counter()
+    print(f"Le temps d'exécution de graph_from_file pour {numero} est : {t1 - t0}")
     if arbre :
+        t0 = time.perf_counter()
         g = kruskal(g)
+        t1 = time.perf_counter()
+        print(f"Le temps d'exécution de Kruskal pour {numero} est : {t1 - t0}")
     total = 0
     with open(data_path + f"routes.{numero}.in", "r", encoding = "utf-8") as file:
         nb_trajets = int(file.readline().split()[0])
@@ -451,9 +456,11 @@ def time_estimator(nb_essais, numero, arbre = True):
             trajet = file.readline().split()
             node1 = int(trajet[0])
             node2 = int(trajet[1])
+            utility = int(trajet[2])
             if arbre :
+                print(f"{_+1} fois")
                 t0 = time.perf_counter()
-                new_min_power(g, node1, node2)
+                new_min_power(*g, node1, node2)
                 t1 = time.perf_counter()
             else :
                 t0 = time.perf_counter()
@@ -469,33 +476,33 @@ def time_estimator(nb_essais, numero, arbre = True):
     """
 
 # Pour kruskal
-def initial_node(previous_node,node):
+def initial_node(initial,node):
     """
-    Fonction de previous_node un dictionnaire, et de node un noeud donc un entier.
+    Fonction de initial un dictionnaire, et de node un noeud donc un entier.
     Trouve le noeud initial d'un noeud (c'est à dire le noeud à partir duquel a été créé la composante connexe)
     Il permettra d'indicer cette composante.
     """
-    if previous_node[node] != node:
-        previous_node[node] = initial_node(previous_node,previous_node[node])
-    return previous_node[node]
+    if initial[node] != node:
+        initial[node] = initial_node(initial,initial[node])
+    return initial[node]
     
-def union(previous_node,rank,node1,node2):
+def union(initial,rank,node1,node2):
     """
-    Unit node 1 à node 2 en faisant devenir leur noeud initial clef/valeur l'un de l'autre dans previous_node.
+    Unit node 1 à node 2 en faisant devenir leur noeud initial clef/valeur l'un de l'autre dans initial.
     En d'autres termes, dans kruskal lorsqu'on tombe sur une arrête qui relie deux arbres,
     union les relie et actualise leurs rangs et noeud initiaux.
     On actualise le rang pour avoir le même noeud initial quelque soit le noeud de l'arbre 
     (on lie les arbres en prenant tjrs le même noeud initial ; celui de rang le plus élevé)
     Actualise également le rang.
     """
-    i1 = initial_node(previous_node,node1)
-    i2 = initial_node(previous_node,node2)
+    i1 = initial_node(initial,node1)
+    i2 = initial_node(initial,node2)
     if i1 == i2: 
         return None
     if rank[i2] < rank[i1]:
-        previous_node[i2] = i1
+        initial[i2] = i1
     else:
-        previous_node[i1]=i2
+        initial[i1]=i2
         if rank[i1] == rank[i2]:
             rank[i2] += 1
     return None
@@ -507,17 +514,22 @@ def kruskal(g):
     inclure dans notre nouveau graphe car on s'intéresse aux trajets ; nous n'en avons que
     faire des points isolés !
     """
-    g_mst = Graph()
+    nodes = [i for i in g.nodes if g.graph[i] != []]
+    g_mst = Graph(nodes = nodes)
     edges = []
-    previous_node = {}  # Noeud précédent. Permettra de remonter au noeud initial de chaque composante connexe avec initial_node
+    initial = {}  # Noeud précédent. Permettra de remonter au noeud initial de chaque composante connexe avec initial_node
                         # Le noeud initial permet d'indicer la composante connexe.
     rank = {}           # Le rang nous permettra de lier des gros arbres avec des petits
         
     # Chaque noeud a comme noeud initial lui même, et comme rang 0
     t0 = time.perf_counter()
-    for node in g.graph:
-        previous_node[node] = node
+    for node in nodes:
+        initial[node] = node
         rank[node] = 0
+    for node in g.graph:
+    #for node in g.nodes:
+        #if node not in g.graph.keys():
+            #continue
         for edge in g.graph[node]:
             edges.append((node,edge[0],edge[1])) # edges devient la liste des arrêtes notées (node1, node2, power)
     t1 = time.perf_counter()
@@ -525,18 +537,21 @@ def kruskal(g):
     edges.sort(key = lambda x : x[2]) # Permet de trier la liste par rapport à la troisième valeur des sous liste de la liste edge
     t2 = time.perf_counter()
     for edge in edges:
-        if initial_node(previous_node,edge[0]) != initial_node(previous_node,edge[1]):
+        if initial_node(initial,edge[0]) != initial_node(initial,edge[1]):
         # Si les bouts d'une arrête nne sont pas déjà dans la même composante connexe, alors on les unit.
             g_mst.add_edge(edge[0],edge[1],edge[2])
-            union(previous_node,rank,edge[0],edge[1])
+            union(initial,rank,edge[0],edge[1])
     t3 = time.perf_counter()
     print("parcourt des arrêtes : ", t3-t2)
     
     t4 = time.perf_counter()
-    previous = get_previous(g_mst, previous_node)
+    previous = get_previous(g_mst, initial)
     t5 = time.perf_counter()
     print("get_previous prend : ", t5 - t4)
-    return g_mst, previous_node, previous
+    print(set(initial.values()))
+    for i in set(initial.values()):
+        print(i, initial[i])
+    return g_mst, initial, previous
 
 # Pour new_min_power
 def power(self,node1,node2):
@@ -558,7 +573,7 @@ def old_get_path(g, source, dest):
     #    return None
 
     visited = set()
-    previous_nodes = {}
+    initials = {}
     following = [source]
 
     while following != []:
@@ -572,19 +587,19 @@ def old_get_path(g, source, dest):
                 continue
             else:
                 following.append(node2)
-                previous_nodes[node2] = node
+                initials[node2] = node
     path = [dest]
     node = dest
     p_min = 0
     while node != source:
-        p_min = max(p_min, power(g, node, previous_nodes[node]))
-        node = previous_nodes[node]
+        p_min = max(p_min, power(g, node, initials[node]))
+        node = initials[node]
         path.insert(0, node)
     return path, p_min
 
-def get_previous(g, previous_node):
+def old_get_previous(g, initial):
     previous = {}
-    for node_ranked in set(previous_node.values()):
+    for node_ranked in set(initial.values()): # On prend les noeuds initiaux de chaque composante connexe
         visited = set()
         following = [node_ranked]
         previous[node_ranked] = (node_ranked, 0, 0)
@@ -606,52 +621,71 @@ def get_previous(g, previous_node):
 
     return previous
 
+# Pour get_previous
+def dfs(g, node, visited, previous, father = 0, c = 0, p = 0):
+    for son, power, distance in g.graph[node]:
+        if son not in visited:
+            previous[son] = (node, c+1, power)
+            visited.add(son)
+            dfs(g, son, visited, previous, father = node, c = c+1, p = power)
+    return
 
-def get_path(g, previous_node, previous, source, dest):
-    print(source)
-    print(previous_node)
-    noeud_mere = previous_node[source]
-    if previous_node[source] != previous_node[dest]:
+
+def get_previous(g, initial):
+    previous = {}
+    visited = set()
+    for node_ranked in set(initial.values()): # On prend les noeuds initiaux de chaque composante connexe
+        # previous[node_ranked] = (node_ranked, 0, 0)
+        # visited.add(node_ranked)
+        dfs(g, node_ranked, visited, previous)
+    return previous
+
+
+def get_path(g, initial, previous, source, dest):
+    if source not in initial.keys() or dest not in initial.keys() or initial[source] != initial[dest]:
         return None
-    
-    power = 0
 
-    if previous[dest][1] < previous[source][1]:     # on veut toujours partir du point le plus loin du noeud mère.
-        path1, node1 = [source], source
-        path2, node2 = [dest], dest
-    else :
-        path1, node1 = [dest], dest
-        path2, node2 = [source], source
+    noeud_mere = initial[source]
+    power = 0
+    condition = previous[dest][1] < previous[source][1]
+    if condition:     # on veut toujours partir du point le plus loin du noeud mère.
+        source, dest = dest, source
+
+    path1, node1 = [dest], dest
+    path2, node2 = [source], source
 
     while previous[node1][1] > previous[node2][1]:
         node1 = previous[node1][0]
         path1.insert(0,node1)
         power = max(power, previous[node1][2])
     # node1 et node2 sont maintenant à la même distance du noeud mère
-
     while node1 != node2:
-        print(f"taille1 {node1} et taille2 {node2}")
         if node1 != noeud_mere:
             power = max(power, previous[node1][2])
             node1 = previous[node1][0]
             path1.insert(0,node1)
+            print("ça tourne node1, ", node1)
+
         if node2 != noeud_mere:
             power = max(power, previous[node2][2])
+            print(previous[node2])
+            print(node1)
             node2 = previous[node2][0]
             if node2 != node1:
                 path2 += [node2]
+            print(initial[node1], initial[node2])
+            print("ça tourne node2, ", node2)
 
+    print ("nouvelle étape")
     path = path2 + path1
+    if condition :
+        path.reverse()
 
     return path, power
 
 
-def new_min_power(g, source, dest):
-    #con_comp = path_existence(g, source, dest)
-    #if con_comp == None:
-    #    return None
-    # pas besoin de g = kruskal(g) car on suppose que le graphe est déjà une arbre
-    return get_path(g, source, dest)
+def new_min_power(g, initial, previous, source, dest):
+    return get_path(g, initial, previous, source, dest)
 
 
 def route_opti (numero):

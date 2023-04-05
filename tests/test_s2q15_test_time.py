@@ -16,4 +16,4 @@ from graph import time_estimator
 # Avec routes 10 on obtient plus de h pour l'ensemble des trajets
 
 for i in range (1, 11, 1):
-    print(f"Avec la route {i}, on obtient {time_estimator(nb_essais = 100, numero = i, arbre = True)} secs pour déterminer l'ensemble des trajets")
+    print(f"Avec la route {i}, on obtient {time_estimator(nb_essais = 10, numero = i, arbre = True)} secs pour déterminer l'ensemble des trajets")
