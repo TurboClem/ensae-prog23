@@ -198,9 +198,13 @@ class Graph:
                 return pmax, self.get_path_with_power(source, destination, pmax)
         return pmax, path
     
-    def graph_viz(self, nom,  dep, dest, power):
+    def graph_viz(self, numero,  dep, dest, power):
+        """
+        Show the graph, highlighting the optimal path
+        """
+        data_path = "/home/onyxia/work/ensae-prog23/input/"
+        filename = f"network.{numero}.in"
 
-        # Permet d'afficher le graph, et de mettre en évidence l'arrivée, le départ et le chemin optimal.
 
         graphe = gr(format='png', engine="circo") # on creer un graph
         trajet=self.get_path_with_power(dep, dest, power)
@@ -258,7 +262,7 @@ class Graph:
             sauv.append(i)
 
 
-        graphe.render(f"{nom}.dot")
+        graphe.render(data_path + f"graphviz.dot")
         print(graphe)
 
         return()
@@ -324,17 +328,6 @@ def neighborhood(g, node, component, visited):
         if neighbor[0] not in visited:
             neighborhood(g, neighbor[0], component, visited)
 
-
-# Commandes pour graphviz :
-
-def graphviz(g):
-    """
-    from graphviz import Digraph
-    g = Digraph(g)
-    print(g.source)
-    return 
-    """
-    raise NotImplementedError()
 
 # Estimation du temps moyen de calcul :
 def time_estimator(nb_essais, numero, arbre = True):
