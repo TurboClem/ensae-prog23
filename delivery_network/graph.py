@@ -230,7 +230,7 @@ class Graph:
                             graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
 
             
-            elif i==dest: # si le sommet considéré est l'arrivée
+            elif i == dest: # si le sommet considéré est l'arrivée
                 graphe.node(f"{i}",f"{i} \n arrivée", color="red")  
                 for voisin in self.graph[i]:
                     if voisin[0] not in sauv: # si le voisin n'as pas déja étét traité

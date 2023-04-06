@@ -69,7 +69,7 @@ def stupid(truck_nb, routes_nb):
 
 for i in range(1, 3):
     print(f"On commence {i}")
-    print(stupid(1, i))
+    print(len(stupid(1, i)))
 
 # Pour trucks 0, on peut faire tourner sur toutes les routes.
 # Pour trucks 1, on peut faire tourner sur toutes les routes.
@@ -116,7 +116,6 @@ def less_stupid(truck_nb, routes_nb):
     strg, price, node1, node2, utility, weighted_utility = candidates[0]
     budget += price
 
-    print(results)
 
     i = 1
     while budget <= 25*(10**9) and i < len(candidates):
@@ -133,4 +132,4 @@ def less_stupid(truck_nb, routes_nb):
 
 #for i in range(2, 3):
 #    print(f"On commence {i}")
-#    print(less_stupid(1, i))
+#    print(len(less_stupid(1, i)))
