@@ -2,6 +2,12 @@ from graph import *
 
 data_path = "/home/onyxia/work/ensae-prog23/input/"
 
+##############################################################################
+# Bon là faut débuguer mais on a pas eu le temps :(
+# L'erreur vient certainement des dicos
+##############################################################################
+
+
 def catalogue(numero):
     catalogue = {}
     with open(data_path + f"trucks.{numero}.in", "r", encoding = "utf-8") as file:
@@ -61,9 +67,9 @@ def stupid(truck_nb, routes_nb):
     return (results)
 
 
-#for i in range(1, 11):
-#    print(f"On commence {i}")
-#    print(len(stupid(2, i)))
+for i in range(1, 3):
+    print(f"On commence {i}")
+    print(stupid(1, i))
 
 # Pour trucks 0, on peut faire tourner sur toutes les routes.
 # Pour trucks 1, on peut faire tourner sur toutes les routes.
@@ -73,6 +79,11 @@ def stupid(truck_nb, routes_nb):
 
 
 def f(power, utility, catalog):
+    """
+    Returns the most judicious vector ([numero, camion], power, price, utility/price).
+    Judicious means with the best utility/price while having a power higher than or equal
+    as the input power.
+    """
     new_catalog = {}
     for i in catalog.items():
         if i[1][0] >= power:
@@ -95,13 +106,17 @@ def less_stupid(truck_nb, routes_nb):
     for trajet in data.keys():
         power, utility, node1, node2 = data[trajet]
         item = f(power, utility, catalog)
-        print(item)
+        if item == None:
+            continue
         camion, price, weighted_utility = item[0][1], item[1][1], item[1][2]
+        #print(camion)
         candidates += [(f"camion {camion}", price, node1, node2, utility, weighted_utility)]
     
     candidates.sort(key = lambda x : x[5], reverse = True)
     strg, price, node1, node2, utility, weighted_utility = candidates[0]
     budget += price
+
+    print(results)
 
     i = 1
     while budget <= 25*(10**9) and i < len(candidates):
@@ -110,13 +125,12 @@ def less_stupid(truck_nb, routes_nb):
         i += 1
         budget += price
 
-
     if i == len(candidates) and budget <= 25*(10**9):
         results += [(strg, (node1, node2), utility)]
 
     return results
 
 
-for i in range(1, 11):
-    print(f"On commence {i}")
-    print(len(less_stupid(0, i)))
+#for i in range(2, 3):
+#    print(f"On commence {i}")
+#    print(less_stupid(1, i))

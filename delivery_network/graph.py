@@ -198,6 +198,71 @@ class Graph:
                 return pmax, self.get_path_with_power(source, destination, pmax)
         return pmax, path
     
+    def graph_viz(self, nom,  dep, dest, power):
+
+        # Permet d'afficher le graph, et de mettre en évidence l'arrivée, le départ et le chemin optimal.
+
+        graphe = gr(format='png', engine="circo") # on creer un graph
+        trajet=self.get_path_with_power(dep, dest, power)
+        key=self.graph.keys() # on récupere tous les sommets
+        sauv=[]
+        print("trajet=", trajet)
+
+        for i in key: # on creer tous les sommets
+            print(i)
+            if i==dep: # si le sommet considéré est le départ
+                print("le depart=", i)
+                graphe.node(f"{i}",f"{i} \n départ", color="red")   # si le sommet est le départ, on le met en rouge
+                for voisin in self.graph[i]:
+                    print("le voisin est=", voisin)
+                    print("trajet[1]=", trajet[1])
+                                              
+                    if voisin[0] not in sauv: # si le voisin n'as pas déja étét traité
+                        print("entrée dans la boucle")
+                        if voisin[0]==trajet[1]:
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}", color="red")
+                            print("on met en rouge")
+                        else: 
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
+
+            
+            elif i==dest: # si le sommet considéré est l'arrivée
+                graphe.node(f"{i}",f"{i} \n arrivée", color="red")  
+                for voisin in self.graph[i]:
+                    if voisin[0] not in sauv: # si le voisin n'as pas déja étét traité
+                        if voisin[0]==trajet[-2]:
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}", color="red")
+                        else: 
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
+
+
+            elif i in trajet: # si le voisin considéré est dans le trajet
+                print("position du voisin dans trajet=", i)
+                graphe.node(f"{i}",f"{i} ", color="orange")
+                rang=trajet.index(i)
+                for voisin in self.graph[i]:
+                    if voisin[0] not in sauv: # si le voisin n'as pas déja étét traité
+                        if voisin[0]==trajet[rang+1] or voisin[0]==trajet[rang-1]:
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}", color="red")
+                            print("on met en rouge")
+                        else: 
+                            graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
+
+
+            else: # sinon
+                graphe.node(f"{i}",f"{i}")
+                for voisin in self.graph[i]:
+                    if voisin[0] not in sauv: # si le voisin n'as pas déja étét traité
+                        graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
+            
+            sauv.append(i)
+
+
+        graphe.render(f"{nom}.dot")
+        print(graphe)
+
+        return()
+    
 
 def graph_from_file(filename):
     """
@@ -443,29 +508,5 @@ def new_min_power(g, previous, source, dest):
 
 
 
-def representation(g, nom):
 
-        graphe = gr(format='png', engine="circo")
-        key = g.graph.keys()
-        sauv = []
-        for i in key: # on creer tous les sommets
-
-            print(i)
-
-            graphe.node(f"{i}",f"{i}")
-
-            for voisin in g.graph[i]:
-
-                if voisin[0] not in sauv:
-
-                    graphe.edge(f"{i}", f"{voisin[0]}", label=f"p={voisin[1]},\n d={voisin[2]}")
-
-            sauv.append(i)
-        graphe.render(f"{nom}.dot")
-
-        print(graphe)
-
-
-
-        return()
 
