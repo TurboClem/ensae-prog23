@@ -79,112 +79,142 @@ class Graph:
         return
 
 
-    def connected_components(self):
+    def connected_components_first_try(self):
         """
-        Returns a list of the graph's connected components 
+        On crée une liste connected_comp. Elle contient des ensembles définis de la sorte :
+            Chaque élément de connected_comp correspond à un noeud.
+            Chaque élément contient ce noeud et tous les noeuds qui lui sont reliés par une arrête.
+
+        Ensuite on utilise la fonction récursive reduction_ensembles sur cette liste.
+            reduction_ensemble prend en entrée une liste d'ensembles.
+            Elle unit les éléments d'intersection non vide de la liste prise en argument.
+            Elle renvoie la liste des composantes connectées.
         """ 
         connected_comp = []
-        visited = set()
-        
-        for node in self.nodes:
-            if node not in visited:
-                component = set()
-                neighborhood(self, node, component, visited)
-                connected_comp.append(component)
-        
-        return connected_comp
-
-
-    def connected_components_set(self):
-        """
-        The result should be a set of frozensets (one per component), 
-        For instance, for network01.in: {frozenset({1, 2, 3}), frozenset({4, 5, 6, 7})}
-
-
-        Notons V le nombre de noeuds, E le nombre d'arrêtes.
-        Guettons voir la complexité de l'algorithme.
-
-        Regardons d'abord connected_components:
-            Dans le pire des cas pour cette partie là de l'algorithme, tous les noeuds sont reliés entre eux.
-            Alors on fait dans le pire des cas E*V opérations.
-        
-        Regardons maintenant reduction_ensembles :
-        En exécutant reduction_ensembles, on fait d'abord len(l)**2 opérations, mais comme len(l) diminue de 1 à chaque fois,
-            On fait SUM{i=1,E}(i**2) = E*(E+1)*(2*E+1)/2 = O(E**2) opérations
-        Ensuite, dans le pire des cas, on parcourt à chaque fois deux fois la liste. 
-                C'est à dire que i va jusqu'a len(l)-1 et j jusqu'à len(l) à chaque fois.
-                Donc on fait SUM{i=1,E}(i*(i-1)) = O(E**3) opérations
-        Alors on fait O(E***3) opérations
-
-        Finalement, l'algorithme est de complexité O( max(E**3, E*V) ) 
-        """
-        return set(map(frozenset, self.connected_components()))
-
-
-    def get_path_with_power(self, source, destination, power):
-        """
-        On utilise l'algorithme de Dijkstra
-        """
-        # On vérifie que source et destination sont bien reliables.
-        # Si on s'occupe des networks on met ça
-        # con_comp = path_existence(self, source, destination)
-        # if con_comp == None:
-        #    return None
-        #unvisited = list(con_comp)
-        
-        # Si on s'occupe des routes on met ça (le graphe est alors connexe)
-        unvisited = set(self.nodes[:])
-
-        dmax = sys.maxsize # On définit la distance de tous les points à la source comme étant "infinie" (maxsize donc)
-        node_distance = dict([(n, dmax) for n in unvisited])
-        node_distance[source] = 0
-        previous = {} #Va stocker pour chaque noeud, le noeud qui le précède dans le chemin le plus court vers la source
-
-        # On parcourt tous les noeuds de la composante connectée
-        while unvisited != set():
-            # On trouve le noeud le plus proche de la source : nearest_node
-            nearest_node = None
-            for node in unvisited:
-                if nearest_node == None:
-                    nearest_node = node
-                elif node_distance[node] < node_distance[nearest_node]:
-                    nearest_node = node
-            # On parcourt les voisins du nearest_node
-            for neighbor in self.graph[nearest_node]:
-                # On regarde si le voisin est plus proche de la source en passant par nearest_node que par l'ancien chemin
-                new_distance = node_distance[nearest_node] + neighbor[2]
-                if new_distance < node_distance[neighbor[0]] and neighbor[1] <= power:
-                    node_distance[neighbor[0]] = new_distance
-                    previous[neighbor[0]] = nearest_node
-            unvisited.remove(nearest_node)
-        path = [destination]
-        i = destination
-        while i != source:
-            if i not in previous.keys():
-                return None
-            j = previous[i]
-            path.insert(0, j)
-            i = j
-        return path
+        for n in self.nodes:
+            l = set()
+            for k in self.graph[n]:
+                l.add(k[0])
+            l.add(n)
+            connected_comp.append(l)
             
+        return set_reduction(connected_comp)
+
+    def connected_components_second_try(self):
+        con_comp = [{self.nodes[0]}]
+        for node in self.nodes:
+            indice = -1
+            nb_con_comp = len(con_comp)
+            for i in range(nb_con_comp):
+                if node in con_comp[i]:
+                    indice = i
+            if indice == -1 :
+                con_comp += [{node}]
+                indice = nb_con_comp
+            for neighbor, power, distance in self.graph[node]:
+                con_comp[indice].add(neighbor)
+        return set_reduction(con_comp)
+
+
+    def get_path_with_power_first_try(self, source, dest, p):
+        # On laisse ce code ici car il répondait à la Q3, avant qu'on ne s'intéresse à la distance.
+        # On l'a ensuite adapté pour la Q5, avant de penser à l'algorithme de Dijkstra que nous avons utilisé dans get_path_with_power
+        """ 
+        On fait un parcours en largeur depuis la source.
+        On réalise une liste de tous les chemins possibles depuis la source.
+        Initalement, le seul chemin parcouru  est [source]
+        A chaque étape, on a k chemins. 
+            Pour tous ces k chemins, on prend le bout du chemin.
+            On trouve ses voisins qui n'ont pas déjà été visités lors du chemin.
+            On remplace le k-ième chemin par les nouveaux qui sont ce même chemin étendu à chacun des voisins.
+        Dès le moment où on rencontre la destination, on vérifie que le chemin est franchissable par le camion (puissance), et on le stocke.
+        Enfin, on choisit dans ce stock le chemin de distance la plus courte.
+        """
+        if path_existence(self, source, dest) == None:
+            return None
+    
+        path = [[source]] # On initialilse : le seul chemin parcouru est le noeud source
+        path_1 = []
+        path_2 = path
+
+        path_bank = []
+
+        while path_1 != path_2 :
+            n0, n = 0, 0
+            path_1 = [i for i in path]
+
+            for i in range(len(path)):
+                n0 += n
+                # on étend tous les chemins parcourus à leurs voisins
+                new_path = extend_path(self,path[n0])
+                n = len(new_path)
+                if n > 0:
+                    del path[n0]
+
+                for j in range(n):
+                    if path == []:
+                        path = [new_path[j]]
+                    else:
+                        path.insert(n0+j,new_path[j])
+                for j in path[n0:n0+n+1]:
+                    # Si le chemin passe par la destination, on a trouvé un chemin qui convient
+                    # On l'ajoute donc à notre banque de chemins
+                    gpath = good_path(self, j, p)
+                    if j[-1] == dest and gpath[0] and j not in path_bank:
+                        path_bank.append((j, gpath[1], gpath[2]))
+                        
+            path_2 = [i for i in path]
+        
+        if path_bank == []:
+            return(None)
+        
+        """
+        coolpath = path_bank[0]
+        for i in path_bank:
+            if coolpath[2] > i[2]:
+                coolpath = i
+        """
+        return(path_bank)
+
 
     def min_power(self, source, destination):
         """
-        Returns min_power and the path relied with this min_power
+        Should return path, min_power. 
+        """
+        """
+        # Si aucun chemin n'existe, on renvoie None
+        if path_existence(self, source, destination) == None:
+            return None
+
+        path = None
+        i = -1
+        while path == None:
+            i+= 1
+            path = self.get_path_with_power(source, destination, i)
+        return i, path
+        """
+        """
+        paths = self.get_path_with_power_first_try(source, destination, sys.maxsize)
+        liste_puissance = [i[1] for i in paths]
+        pmin = min(liste_puissance)
+        path = paths[liste_puissance.index(pmin)][0]
+        return pmin, path
+
+        #liste_routes = turbo_fonction(src, dest)
+        #for chemin in liste_routes :
+        #    liste_puissance.append(chemin[len(chemin) - 1])
         """
         path = self.get_path_with_power(source, destination, sys.maxsize)
         if path == None:
             return None, None
         pmax = 0
-        # On récupère la puissance minimal nécessaire à un trajet faisable (donc en prenant un camion de puissance maxsize)
         for i in range(len(path)-1):
             for j in self.graph[path[i]]:
                 if j[0] == path[i+1]:
                     if j[1] > pmax:
                         pmax = j[1]
         pmin = 0
-        # On fait le choix de rester sur des puissances entières (c'est arbitraire)
-        while pmax - pmin > 1: # A chaque fois on prend le quotient dans la division par 2, donc la parité peut changer
+        while pmax - pmin > 1:
             path = self.get_path_with_power(source, destination, pmin + (pmax-pmin)//2)
             if path == None:
                 pmin = pmin + (pmax-pmin)//2
@@ -219,12 +249,12 @@ def graph_from_file(filename):
     """
     with open(filename, "r", encoding = "utf-8") as file:
         line0 = file.readline().split()
-        #if len(line0) == 2:
-        n, m = map(int, line0)
-        g = Graph(range(1, n+1))
-        #else : 
-        #    m = int(line0[0])
-        #    g = Graph()
+        if len(line0) == 2:
+            n, m = map(int, line0)
+            g = Graph(range(1, n+1))
+        else :
+            m = int(line0[0])
+            g = Graph()
 
         for _ in range(m):
             edge = list(map(write_number, file.readline().split()))
@@ -249,31 +279,87 @@ def write_number(a):
     return (int(a) if a == int(a) else a)
 
 
-#Pour connected_components :
-def neighborhood(g, node, component, visited):
-    visited.add(node)
-    component.add(node)
-    for neighbor in g.graph[node]:
-        if neighbor[0] not in visited:
-            neighborhood(g, neighbor[0], component, visited)
+#Pour connected_components_set_first_try et second_try :
+def duplicated_components(l):
+    for i in l:
+        for j in l:
+            if i.intersection(j) != set() and i != j:
+                return True
+    return False
+
+def set_reduction(l):
+    if duplicated_components(l) == False :
+        return l
+    else:
+        for i in l:
+            for j in l:
+                if i.intersection(j) != set() and i!=j:
+                    c = l
+                    if i in c:
+                        c.remove(i)
+                    c.remove(j)
+                    c.append(i.union(j))
+                    l = set_reduction(c)
+    return l
+
+#Pour get_path_with_power_first_try
+def xor(a, b):
+    return ((a and not b) or (b and not a))
+
+def path_existence(g, src, dest):
+    for c in g.connected_components_set():
+        if src in c and dest in c :
+            return c
+    return None
+
+def extend_path(g, path):
+    """
+    Renvoie la liste des extensions du chemin.
+    Les extensions rallongent d'un noeud non déjà visité.
+    Si on arrive à une extrémité, on renvoie une liste contenant le chemin initial.
+    """
+    neighbor = [g.graph[path[-1]][i][0] for i in range(len(g.graph[path[-1]]))]
+    E = set(neighbor)-set(neighbor).intersection(set(path))
+    if E == set():
+        new_paths = [path]
+    else:
+        new_paths = [path + [i] for i in E]
+    return new_paths
+
+def good_path(g, path, p):
+    """
+    Renvoie un couple booléen, entier, entier.
+    Le booléen reflète la capacité du camion à passer le chemin path.
+    Le premier entier est la puissance minimale nécessaire à un camion pour parcourir le chemin
+    Le second entier est la distance du chemin.
+    """
+    condition = True
+    pmax = 0
+    distance = 0
+    for i in range(len(path)-1):
+        for j in g.graph[path[i]]:
+            if j[0] == path[i+1]:
+                if j[1] > p:
+                    condition = False
+                elif j[1] > pmax:
+                    pmax = j[1]
+                distance += j[2]
+    return condition, pmax, distance
 
 
 # Commandes pour graphviz :
-
+"""
 def graphviz(g):
-    """
     from graphviz import Digraph
     g = Digraph(g)
     print(g.source)
     return 
-    """
-    raise NotImplementedError()
+"""
 
 # Estimation du temps moyen de calcul :
 def time_estimator(nb_essais, numero, arbre = True):
     """
-    Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet.
-    Si arbre = True, on exécute kruskal.
+    Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet
     """
     data_path = "/home/onyxia/work/ensae-prog23/input/"
     t0 = time.perf_counter()

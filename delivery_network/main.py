@@ -48,3 +48,17 @@ print("fini !")
 for i in range (1, 3, 1):
     print(g[i])
 """
+
+#Recodage de graphviz
+
+def representation_graph(g, source, destination):
+    import graphviz 
+    graphique = graphviz.Digraph("Réseau", comment = "Représentation du réseau")
+    for node in g.nodes : 
+        graphique.node(str(node), str(node))
+    
+    for element in g.graph : 
+        for component in g.graph[element]:
+            graphique.edge
+    
+

@@ -19,5 +19,5 @@ def write_routes_out(numero):
             file.write(f"{power}\n")
 
 
-for i in range (1, 11):
-    write_routes_out(i)
+#for i in range (1, 11):
+#    write_routes_out(i)

@@ -1,12 +1,12 @@
 import sys 
 sys.path.append("delivery_network/")
-import time
 
 from graph import *
 
-
-# Au début, pour route 5, on trouve un temps de calcul moyen par trajet de 10min 40sec, soit plus d'1,5 millions d'heures
-# pour l'ensemble des trajets. C'est bien trop.
+# Estimation du temps moyen de calcul :
+# Si on veut voir tous les trajets, on prend (nb_essai > nb_trajets)
+for i in range (1, 11, 1):
+    print(f"Avec la route {i}, on obtient {time_estimator(nb_essais = 1000000, numero = i, arbre = True)} secs pour déterminer l'ensemble des trajets")
 
 # En prenant le nombre d'essais de chemin à 10, avant d'avoir le dictionnaire previous
 # Avec routes 1 on obtient environ 3E-3 secs pour l'ensemble des trajets
@@ -21,7 +21,7 @@ from graph import *
 # Avec routes 10 on obtient plus de h pour l'ensemble des trajets
 
 
-# Maintenant, on arrive à ces résultats :
+# Une fois le dictionnaire previous créé, on arrive à ces résultats :
 
 #Le temps d'exécution de graph_from_file pour 1 est : 0.00039565982297062874
 #Le temps d'exécution de kruskal pour 1 est : 0.0003715776838362217
@@ -62,44 +62,3 @@ from graph import *
 #Le temps d'exécution de graph_from_file pour 10 est : 1.2830187031067908
 #Le temps d'exécution de kruskal pour 10 est : 2.6913598920218647
 #Avec la route 10, on obtient 27.31225882144645 secs pour déterminer l'ensemble des trajets
-
-# Estimation du temps moyen de calcul :
-def time_estimator(nb_essais, numero, arbre = True):
-    """
-    Mesure pour le fichier routes.numero.in le temps de calcul moyen d'un trajet
-    """
-    data_path = "/home/onyxia/work/ensae-prog23/input/"
-    t0 = time.perf_counter()
-    g = graph_from_file(data_path + f"network.{numero}.in")
-    t1 = time.perf_counter()
-    print(f"Le temps d'exécution de graph_from_file pour {numero} est : {t1 - t0}")
-    if arbre :
-        t0 = time.perf_counter()
-        g = kruskal(g)
-        t1 = time.perf_counter()
-        print(f"Le temps d'exécution de Kruskal pour {numero} est : {t1 - t0}")
-    total = 0
-    with open(data_path + f"routes.{numero}.in", "r", encoding = "utf-8") as file:
-        nb_trajets = int(file.readline().split()[0])
-        for _ in range(min(nb_essais, nb_trajets)):
-            trajet = file.readline().split()
-            node1 = int(trajet[0])
-            node2 = int(trajet[1])
-            utility = write_number(trajet[2])
-            if arbre :
-                t0 = time.perf_counter()
-                new_min_power(*g, node1, node2)
-                t1 = time.perf_counter()
-            else :
-                t0 = time.perf_counter()
-                g.min_power(node1, node2)
-                t1 = time.perf_counter()
-
-            total += t1 - t0
-    mean_time = total/min(nb_trajets, nb_essais)
-    return (mean_time * nb_trajets)
-
-
-# Si on veut voir tous les trajets, on prend (nb_essai > nb_trajets)
-for i in range (1, 11, 1):
-    print(f"Avec la route {i}, on obtient {time_estimator(nb_essais = 1000000, numero = i, arbre = True)} secs pour déterminer l'ensemble des trajets")

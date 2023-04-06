@@ -31,13 +31,17 @@ def stupid(truck_nb, routes_nb):
     data = data_routes(routes_nb)
 
     optimized = []
+    visited = set()
 
     for trajet in data.keys():
         for key in catalog.keys():
+            #visited[key] = [None, None]
             power_trajet, utility, node1, node2 = data[trajet]
             power_truck, price = catalog[key]
-            if power_trajet <= power_truck :
+            if power_trajet <= power_truck: #and trajet not in visited.values():
                 optimized += [[(key, trajet), utility/price]]
+                #visited[key] = trajet
+                #break
 
     optimized.sort(key = lambda x : x[1], reverse = True)
 
@@ -50,16 +54,18 @@ def stupid(truck_nb, routes_nb):
         power_trajet, utility, node1, node2 = data[trajet]
         i += 1
         budget += price
-        if budget <= 25*(10**9):
+        if budget <= 25*(10**9) and trajet not in visited:
             results += [(f"camion {key[1]}", (node1, node2), utility)]
+            visited.add(trajet)
 
     return (results)
 
 
 for i in range(1, 11):
     print(f"On commence {i}")
-    stupid(2, i)
+    print(len(stupid(2, i)))
 
 # Pour trucks 0, on peut faire tourner sur toutes les routes.
 # Pour trucks 1, on peut faire tourner sur toutes les routes.
 # Pour trucks 2, c'est plus compliqué dès la deuxième route.
+    # Maintenant pour trucks 2, ça marche jusqu'à 6
