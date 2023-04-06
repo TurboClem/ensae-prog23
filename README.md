@@ -19,3 +19,13 @@ La structure des fichiers network.x.in est la suivante :
 La structure des fichiers routes.x.in est la suivante : 
 - la première ligne contient un entier qui correspond aux nombres de trajets dans l'ensemble (T)
 - les T lignes suivantes contiennent chacune un trajet sous la forme `ville1 ville2 utilité`, où utilité est le profit acquis si le trajet correspondant est couvert. 
+
+
+###############################################################################################################################
+
+Nous avons ajouté des fichiers :
+    - first_tries.py répertorie les anciennes méthodes et fonctions utilisé avant les améliorations.
+    - truck.py contient toutes les fonctions pour traiter la Q18
+    -write_routes.out permet de créer les fichiers routes.{numero}.out
+
+Aussi dans inputs nous avons graphviz.dot qui donne un exemple de tracé de graphe avec un chemin mis en couleur.

@@ -3,7 +3,8 @@ from graph import *
 data_path = "/home/onyxia/work/ensae-prog23/input/"
 
 ##############################################################################
-# Bon là faut débuguer mais on a pas eu le temps :(
+# Malheureusement, notre code ne fonctionne pas parfaitement.
+# Il reste du déboguage à faire, mais nous n'avons pas eu le temps.
 # L'erreur vient certainement des dicos
 ##############################################################################
 
@@ -32,7 +33,7 @@ def data_routes(numero):
     return data
 
 
-def stupid(truck_nb, routes_nb):
+def f(truck_nb, routes_nb):
     catalog = catalogue(truck_nb)
     data = data_routes(routes_nb)
 
@@ -69,7 +70,7 @@ def stupid(truck_nb, routes_nb):
 
 for i in range(1, 3):
     print(f"On commence {i}")
-    print(len(stupid(1, i)))
+    print(len(f(1, i)))
 
 # Pour trucks 0, on peut faire tourner sur toutes les routes.
 # Pour trucks 1, on peut faire tourner sur toutes les routes.
@@ -78,7 +79,7 @@ for i in range(1, 3):
 
 
 
-def f(power, utility, catalog):
+def g(power, utility, catalog):
     """
     Returns the most judicious vector ([numero, camion], power, price, utility/price).
     Judicious means with the best utility/price while having a power higher than or equal
@@ -94,7 +95,7 @@ def f(power, utility, catalog):
     #return new_catalog.items()[0]
 
 
-def less_stupid(truck_nb, routes_nb):
+def f2(truck_nb, routes_nb):
     catalog = catalogue(truck_nb)
     data = data_routes(routes_nb)
     sorted(catalog.items(), key=lambda x: x[1][0])
@@ -132,4 +133,4 @@ def less_stupid(truck_nb, routes_nb):
 
 #for i in range(2, 3):
 #    print(f"On commence {i}")
-#    print(len(less_stupid(1, i)))
+#    print(len(f2(1, i)))
