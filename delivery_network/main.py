@@ -1,12 +1,13 @@
-from graph import *
+from graph import representation, graph_from_file
+
 
 data_path = "/home/onyxia/work/ensae-prog23/input/"
-filename = "network.4.in"
 
-a = [(1, 2)]
+
+"""a = [(1, 2)]
 for i in a:
     (b,c) = i
-print(b,c)
+print(b,c)"""
 
 
 """
@@ -37,7 +38,6 @@ print(d.values())
 #    print (n)
 """
 
-#print(g[2][15870], g[2][28162])
 
 """
 print("kruskal fait")
@@ -48,17 +48,23 @@ print("fini !")
 for i in range (1, 3, 1):
     print(g[i])
 """
-
-#Recodage de graphviz
-
-def representation_graph(g, source, destination):
-    import graphviz 
+"""
+    def representation_graph(network):
+    import graphviz
+    g = graph_from_file(data_path + network)
     graphique = graphviz.Digraph("Réseau", comment = "Représentation du réseau")
-    for node in g.nodes : 
+    for node in g.nodes :
         graphique.node(str(node), str(node))
-    
-    for element in g.graph : 
+    graphique.attr(rankdir = "LR")
+    for element in g.graph :
         for component in g.graph[element]:
-            graphique.edge
-    
+            graphique.edge(str(element), str(component[0]))
+    return graphique
 
+
+display(representation_graph("network.00.in"))
+
+"""
+
+g = graph_from_file(data_path + "network.00.in")
+representation(g, "ooooooh")

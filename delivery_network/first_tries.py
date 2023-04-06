@@ -507,9 +507,7 @@ def old_get_path(g, source, dest):
             continue                # Passe directement à la prochaine étape du while
         visited.add(node)
         for node2, p, d in g.graph[node]:
-            if node2 in visited:
-                continue
-            else:
+            if node2 not in visited:
                 following.append(node2)
                 initials[node2] = node
     path = [dest]
