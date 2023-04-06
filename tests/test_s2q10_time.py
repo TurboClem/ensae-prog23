@@ -1,7 +1,6 @@
-#import sys 
-#sys.path.append("delivery_network/")
-
-from graph import time_estimator
+import sys 
+sys.path.append("delivery_network/")
+from graph import *
 
 # Estimation du temps :
 for i in range (1, 11, 1):
