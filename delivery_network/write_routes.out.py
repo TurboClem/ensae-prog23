@@ -1,22 +1,23 @@
 from graph import *
 
-with open(filename, "r", encoding = "utf-8") as file:
-    line0 = file.readline().split()
-    if len(line0) == 2:
-        n, m = map(int, line0)
-        g = Graph(range(1, n+1))
-    else :
-        m = int(line0[0])
-        g = Graph()
+data_path = "/home/onyxia/work/ensae-prog23/input/"
 
-    for _ in range(m):
-        edge = list(map(write_number, file.readline().split()))
-        if len(edge) == 3:
-            node1, node2, power_min = edge
-            g.add_edge(node1, node2, power_min) # will add dist=1 by default
-        elif len(edge) == 4:
-            node1, node2, power_min, dist = edge
-            g.add_edge(node1, node2, power_min, dist)
-        else:
-            raise Exception("Format incorrect")
-return g
+def write_routes_out(numero):
+
+    powers = []
+
+    g = kruskal(graph_from_file(data_path + f"network.{numero}.in"))
+    with open(data_path + f"routes.{numero}.in", "r", encoding = "utf-8") as file:
+        nb_trajets = int(file.readline().split()[0])
+        for _ in range (nb_trajets):
+            node1, node2, utiliy = map(write_number, file.readline().split())
+            powers.append(new_min_power(*g, node1, node2))
+
+
+    with open(data_path + f"routes.{numero}.out", "w", encoding = "utf-8") as file:
+        for power in powers:
+            file.write(f"{power}\n")
+
+
+for i in range (1, 11):
+    write_routes_out(i)

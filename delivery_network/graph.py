@@ -219,7 +219,7 @@ class Graph:
             return None
         unvisited = list(con_comp)
         """
-        # Si on s'occupe des routes on met ça (le grpahe est alors connexe)
+        # Si on s'occupe des routes on met ça (le graphe est alors connexe)
         unvisited = set(self.nodes[:])
 
         dmax = sys.maxsize # On définit la distance de tous les points à la source comme étant "infinie" (maxsize donc)
@@ -553,7 +553,7 @@ def kruskal(g):
     #print(len(set(initial.values())))
     #for i in set(initial.values()):
     #    print(i, initial[i])
-    return g_mst, initial, previous
+    return g_mst, previous
 
 # Pour new_min_power
 def power(self,node1,node2):
@@ -636,11 +636,9 @@ def dfs(g, node, previous= {}, father = 0, c = 0, p = 0):
     return previous
 
 
-def get_path(g, initial, previous, source, dest):
-    if source not in initial.keys() or dest not in initial.keys() or initial[source] != initial[dest]:
-        return None
-
-    power = 0
+def get_path(g, previous, source, dest):
+    # Les graphes sont connexes, donc osef de vérifier qu'ils appartienent à la même composante
+    power = {0}
     condition = previous[dest][1] < previous[source][1]
     if condition:     # on veut toujours partir du point le plus loin du noeud mère.
         source, dest = dest, source
@@ -649,29 +647,29 @@ def get_path(g, initial, previous, source, dest):
     path2, node2 = [source], source
 
     while previous[node1][1] > previous[node2][1]:
-        node1 = previous[node1][0]
+        node1, new_power = previous[node1][0], previous[node1][2]
         path1.insert(0,node1)
-        power = max(power, previous[node1][2])
+        power.add(new_power)
     while node1 != node2:
-        power = max(power, previous[node1][2])
-        node1 = previous[node1][0]
+        node1, new_power = previous[node1][0], previous[node1][2]
         path1.insert(0,node1)
+        power.add(new_power)
 
-        power = max(power, previous[node2][2])
-        node2 = previous[node2][0]
+        node2, new_power = previous[node2][0], previous[node2][2]
+        power.add(new_power)
         if node2 != node1:
             path2 += [node2]
 
-
     path = path2 + path1
+    min_power = max(power)
     if condition :
         path.reverse()
 
-    return path, power
+    return path, min_power
 
 
-def new_min_power(g, initial, previous, source, dest):
-    return get_path(g, initial, previous, source, dest)
+def new_min_power(g, previous, source, dest):
+    return get_path(g, previous, source, dest)[1]
 
 
 def route_opti (numero):
